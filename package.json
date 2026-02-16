@@ -1,0 +1,35 @@
+{
+	"name": "tsugihe",
+	"description": "__MSG_description__",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "wxt",
+		"dev:firefox": "wxt -b firefox",
+		"build": "wxt build",
+		"build:firefox": "wxt build -b firefox",
+		"zip": "wxt zip",
+		"zip:firefox": "wxt zip -b firefox",
+		"compile": "tsc --noEmit",
+		"postinstall": "wxt prepare",
+		"check": "biome check --write",
+		"test": "bun test"
+	},
+	"dependencies": {
+		"@mash43/can-i-extend": "^0.1.0",
+		"@mash43/relnext": "^0.1.2",
+		"@wxt-dev/i18n": "^0.2.4",
+		"solid-js": "^1.9.11"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.14",
+		"@tailwindcss/vite": "^4.1.18",
+		"@types/bun": "^1.3.9",
+		"@wxt-dev/module-solid": "^1.1.4",
+		"daisyui": "^5.5.18",
+		"tailwindcss": "^4.1.18",
+		"typescript": "^5.9.3",
+		"wxt": "^0.20.14"
+	}
+}

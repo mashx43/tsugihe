@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@layer base {
+	p {
+		@apply leading-relaxed;
+	}
+	code {
+		@apply bg-base-300 px-1 rounded;
+	}
+}
