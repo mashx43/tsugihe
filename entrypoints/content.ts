@@ -15,8 +15,8 @@ import {
 } from "@/utils/storage";
 import { getTargetUrlByPattern, isSameUrl } from "@/utils/url";
 
-const NAVIGATED_NEXT_URL_KEY = "tsugihe:navigated_next_url";
-const NAVIGATED_PREV_URL_KEY = "tsugihe:navigated_prev_url";
+const RECENT_NAVIGATIONS_KEY = "tsugihe:recent_navigations";
+const HISTORY_DIRECTION_KEY = "tsugihe:history_direction";
 
 const INTERACTIVE_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 const INTERACTIVE_ROLES = new Set([
@@ -30,33 +30,91 @@ const INTERACTIVE_ROLES = new Set([
 	"radio",
 ]);
 
+interface NavState {
+	nextUrl?: string;
+	prevUrl?: string;
+}
+
+type Direction = "next" | "prev";
+
 interface NavigationConfig {
-	direction: "next" | "prev";
-	checkKey: string;
+	direction: Direction;
 	historyFn: () => void;
 	findFn: (html: string, url: string) => NavigationResult | null;
 	findByUrlFn: (url: string) => Promise<string | undefined | null>;
-	saveKey: string;
 }
 
-const NAVIGATION_CONFIGS: Record<"next" | "prev", NavigationConfig> = {
+const NAVIGATION_CONFIGS: Record<Direction, NavigationConfig> = {
 	next: {
 		direction: "next",
-		checkKey: NAVIGATED_PREV_URL_KEY,
 		historyFn: () => window.history.forward(),
 		findFn: findNext,
 		findByUrlFn: findNextByUrl,
-		saveKey: NAVIGATED_NEXT_URL_KEY,
 	},
 	prev: {
 		direction: "prev",
-		checkKey: NAVIGATED_NEXT_URL_KEY,
 		historyFn: () => window.history.back(),
 		findFn: findPrev,
 		findByUrlFn: findPrevByUrl,
-		saveKey: NAVIGATED_PREV_URL_KEY,
 	},
 };
+
+/**
+ * Gets the navigation state from session storage.
+ */
+function getNavState(): Record<string, NavState> {
+	try {
+		return JSON.parse(sessionStorage.getItem(RECENT_NAVIGATIONS_KEY) ?? "{}");
+	} catch {
+		return {};
+	}
+}
+
+/**
+ * Saves the navigation state to session storage.
+ */
+function saveNavState(state: Record<string, NavState>): void {
+	sessionStorage.setItem(RECENT_NAVIGATIONS_KEY, JSON.stringify(state));
+}
+
+/**
+ * Normalizes a URL for use as a key in the navigation state.
+ */
+function normalizeUrl(urlStr: string | undefined | null): string {
+	if (!urlStr) return "";
+	try {
+		const url = new URL(urlStr, window.location.href);
+		return url.origin + url.pathname.replace(/\/$/, "") + url.search;
+	} catch {
+		return urlStr ?? "";
+	}
+}
+
+/**
+ * Records a navigation between two URLs.
+ */
+function recordNavigation(
+	fromUrl: string,
+	toUrl: string,
+	direction: Direction,
+): void {
+	const fromKey = normalizeUrl(fromUrl);
+	const toKey = normalizeUrl(toUrl);
+	if (!fromKey || !toKey || fromKey === toKey) return;
+
+	const state = getNavState();
+	if (!state[fromKey]) state[fromKey] = {};
+	if (!state[toKey]) state[toKey] = {};
+
+	if (direction === "next") {
+		state[fromKey].nextUrl = toKey;
+		state[toKey].prevUrl = fromKey;
+	} else {
+		state[fromKey].prevUrl = toKey;
+		state[toKey].nextUrl = fromKey;
+	}
+	saveNavState(state);
+}
 
 /**
  * Determines whether the element is an interactive input element.
@@ -85,26 +143,18 @@ function isModifierMatch(event: KeyboardEvent, modifier: ModifierKey): boolean {
 }
 
 /**
- * Removes the URL stored in session storage if it differs from the current URL.
- */
-function cleanupNavigatedUrl(key: string): void {
-	const savedUrl = sessionStorage.getItem(key);
-	if (savedUrl && !isSameUrl(savedUrl, window.location.href)) {
-		sessionStorage.removeItem(key);
-	}
-}
-
-/**
  * Executes the navigation. Clicks the element if it exists, otherwise updates the URL.
  */
-function performNavigation(url: string, saveKey: string): void {
-	const absoluteUrl = new URL(url, window.location.href).href;
+function performNavigation(url: string, direction: Direction): void {
+	const currentUrl = window.location.href;
+	const absoluteUrl = new URL(url, currentUrl).href;
+
+	recordNavigation(currentUrl, absoluteUrl, direction);
+
 	const links = Array.from(
 		document.querySelectorAll<HTMLAnchorElement>("a[href]"),
 	);
 	const targetLink = links.find((a) => isSameUrl(a.href, absoluteUrl));
-
-	sessionStorage.setItem(saveKey, absoluteUrl);
 
 	if (targetLink) {
 		targetLink.click();
@@ -117,25 +167,14 @@ function performNavigation(url: string, saveKey: string): void {
  * Navigates in the specified direction.
  */
 async function navigate(config: NavigationConfig): Promise<void> {
-	const host = window.location.hostname;
-	const navigatedUrl = sessionStorage.getItem(config.checkKey);
-
-	// If the page is already in the history (coming from the opposite direction), use history.
-	if (navigatedUrl && isSameUrl(navigatedUrl, window.location.href)) {
-		sessionStorage.removeItem(config.checkKey);
-		// Save the current URL so the opposite direction can be used again on the target page.
-		const oppositeKey =
-			config.direction === "next"
-				? NAVIGATED_PREV_URL_KEY
-				: NAVIGATED_NEXT_URL_KEY;
-		sessionStorage.setItem(oppositeKey, window.location.href);
-		config.historyFn();
-		return;
-	}
-
 	const currentUrl = window.location.href;
+	const currentKey = normalizeUrl(currentUrl);
+	const state = getNavState();
+
 	let targetUrl: string | undefined | null = null;
 
+	// 1. Try to find the target URL from the current page patterns/DOM
+	const host = window.location.hostname;
 	const patterns = await getDomainPatterns(host);
 	for (const pattern of patterns) {
 		const potentialUrl = getTargetUrlByPattern(
@@ -152,32 +191,52 @@ async function navigate(config: NavigationConfig): Promise<void> {
 	if (!targetUrl) {
 		const { url, selector } =
 			config.findFn(document.documentElement.outerHTML, currentUrl) ?? {};
-
 		if (url) {
 			targetUrl = url;
 		} else if (selector) {
 			const el = document.querySelector(selector) as HTMLAnchorElement | null;
-			el?.click();
+			if (el) {
+				const href = el.href;
+				recordNavigation(currentUrl, href, config.direction);
+				el.click();
+				return;
+			}
 		}
 	}
 
+	// 2. If not found, try to use the recorded relationship
 	if (!targetUrl) {
-		const found = await config.findByUrlFn(currentUrl);
-		if (found) {
-			targetUrl = found;
-		}
+		targetUrl =
+			config.direction === "next"
+				? state[currentKey]?.nextUrl
+				: state[currentKey]?.prevUrl;
+	}
+
+	// 3. Last resort: try findByUrl
+	if (!targetUrl) {
+		targetUrl = await config.findByUrlFn(currentUrl);
 	}
 
 	if (targetUrl) {
-		performNavigation(targetUrl, config.saveKey);
+		// Use history if it's likely to lead where we want (based on immediate previous navigation)
+		const historyDir = sessionStorage.getItem(HISTORY_DIRECTION_KEY);
+		if (historyDir === (config.direction === "next" ? "prev" : "next")) {
+			sessionStorage.setItem(HISTORY_DIRECTION_KEY, config.direction);
+			config.historyFn();
+			return;
+		}
+
+		performNavigation(targetUrl, config.direction);
 	}
 }
 
 export default defineContentScript({
 	matches: ["<all_urls>"],
 	main() {
-		cleanupNavigatedUrl(NAVIGATED_NEXT_URL_KEY);
-		cleanupNavigatedUrl(NAVIGATED_PREV_URL_KEY);
+		const historyDirection = sessionStorage.getItem(HISTORY_DIRECTION_KEY);
+		if (historyDirection) {
+			sessionStorage.removeItem(HISTORY_DIRECTION_KEY);
+		}
 
 		window.addEventListener("keydown", async (event) => {
 			if (event.repeat) return;
