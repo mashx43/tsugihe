@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
-import { formatKey } from "@/hooks/useKeySettings";
+import { FormField } from "@/components/ui/FormField";
+import { formatKey } from "@/utils/keyboard";
 
 interface KeyRecordingButtonProps {
 	label: string;
@@ -12,10 +13,7 @@ export function KeyRecordingButton(
 	props: KeyRecordingButtonProps,
 ): JSX.Element {
 	return (
-		<div class="form-control">
-			<div class="label">
-				<span class="label-text">{props.label}</span>
-			</div>
+		<FormField label={props.label}>
 			<button
 				type="button"
 				class={`btn btn-outline w-full ${props.isRecording ? "btn-primary" : ""}`}
@@ -23,6 +21,6 @@ export function KeyRecordingButton(
 			>
 				{props.isRecording ? i18n.t("press_key_hint") : formatKey(props.value)}
 			</button>
-		</div>
+		</FormField>
 	);
 }

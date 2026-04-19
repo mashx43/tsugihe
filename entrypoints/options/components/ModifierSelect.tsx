@@ -1,5 +1,6 @@
 import { For, type JSX } from "solid-js";
-import { MODIFIER_LABELS } from "@/hooks/useKeySettings";
+import { FormField } from "@/components/ui/FormField";
+import { getModifierLabels } from "@/utils/keyboard";
 import type { ModifierKey } from "@/utils/storage";
 
 interface ModifierSelectProps {
@@ -9,25 +10,20 @@ interface ModifierSelectProps {
 }
 
 export function ModifierSelect(props: ModifierSelectProps): JSX.Element {
+	const labels = () => getModifierLabels(props.isMac ? "mac" : "windows");
+
 	return (
-		<label class="form-control">
-			<div class="label">
-				<span class="label-text">{i18n.t("modifier_key_label")}</span>
-			</div>
+		<FormField label={i18n.t("modifier_key_label")}>
 			<select
 				class="select w-full"
 				value={props.value ?? "none"}
 				onChange={(e) => props.onChange(e.currentTarget.value as ModifierKey)}
 			>
 				<option value="none">{i18n.t("none")}</option>
-				<For
-					each={Object.entries(
-						MODIFIER_LABELS[props.isMac ? "mac" : "windows"],
-					)}
-				>
+				<For each={Object.entries(labels())}>
 					{([key, label]) => <option value={key}>{label}</option>}
 				</For>
 			</select>
-		</label>
+		</FormField>
 	);
 }

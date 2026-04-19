@@ -1,3 +1,5 @@
+import type { ModifierKey } from "@/utils/keyboard";
+
 const KEY_ENABLED = "local:enabled";
 const KEY_URL_PATTERNS = "local:url_patterns";
 const KEY_MODIFIER_KEY = "local:modifier_key";
@@ -58,8 +60,6 @@ export async function setDomainPatterns(
 	const map = await getStorage<Record<string, string[]>>(KEY_URL_PATTERNS);
 	await storage.setItem(KEY_URL_PATTERNS, { ...map, [host]: patterns });
 }
-
-export type ModifierKey = "none" | "alt" | "ctrl" | "meta" | "shift";
 
 /**
  * Gets the modifier key setting

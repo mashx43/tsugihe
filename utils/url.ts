@@ -120,3 +120,19 @@ export function isSameUrl(url1: string, url2: string): boolean {
 		return url1 === url2;
 	}
 }
+
+/**
+ * Normalizes a URL for use as a key in the navigation state.
+ */
+export function normalizeUrl(
+	urlStr: string | undefined | null,
+	baseUrl: string = window.location.href,
+): string {
+	if (!urlStr) return "";
+	try {
+		const url = new URL(urlStr, baseUrl);
+		return url.origin + url.pathname.replace(/\/$/, "") + url.search;
+	} catch {
+		return urlStr ?? "";
+	}
+}

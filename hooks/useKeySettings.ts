@@ -1,39 +1,17 @@
 import { createResource } from "solid-js";
 import {
+	formatKey,
+	getModifierLabels,
+	type ModifierKey,
+} from "@/utils/keyboard";
+import {
 	getModifierKey,
 	getNextKey,
 	getPrevKey,
-	type ModifierKey,
 	setModifierKey,
 	setNextKey,
 	setPrevKey,
 } from "@/utils/storage";
-
-export const MODIFIER_LABELS = {
-	mac: {
-		alt: "Option (⌥)",
-		ctrl: "Control (⌃)",
-		meta: "Command (⌘)",
-		shift: "Shift (⇧)",
-	},
-	windows: {
-		alt: "Alt",
-		ctrl: "Ctrl",
-		meta: "Win",
-		shift: "Shift",
-	},
-} as const;
-
-export type ModifierLabel =
-	| (typeof MODIFIER_LABELS.mac)[keyof typeof MODIFIER_LABELS.mac]
-	| (typeof MODIFIER_LABELS.windows)[keyof typeof MODIFIER_LABELS.windows];
-
-export function formatKey(key: string | undefined): string {
-	if (!key) return "";
-	if (key === " ") return "Space";
-	if (key.length === 1) return key.toUpperCase();
-	return key;
-}
 
 export function useKeySettings() {
 	const [modifierKey, { mutate: mutateModifier }] =
@@ -44,12 +22,12 @@ export function useKeySettings() {
 		browser.runtime.getPlatformInfo(),
 	);
 
-	function getModifierLabel(): ModifierLabel | "" {
+	function getModifierLabel(): string {
 		const mod = modifierKey();
 		if (!mod || mod === "none") return "";
 
-		const os = platformInfo()?.os === "mac" ? "mac" : "windows";
-		return MODIFIER_LABELS[os][mod];
+		const labels = getModifierLabels(platformInfo()?.os);
+		return labels[mod as keyof typeof labels];
 	}
 
 	function getHint() {

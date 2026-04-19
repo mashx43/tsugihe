@@ -1,3 +1,5 @@
+import { getDomainEnabled, setDomainEnabled } from "@/utils/storage";
+
 export default defineBackground(() => {
 	browser.runtime.onInstalled.addListener(async (details) => {
 		if (details.reason === "install") {
@@ -9,12 +11,19 @@ export default defineBackground(() => {
 		}
 	});
 
-	async function updateBadge(tabId: number, url?: string) {
+	async function updateBadge(
+		tabId: number,
+		url?: string,
+		enabledMap?: Record<string, boolean>,
+	) {
 		if (!url) return;
 
 		try {
 			const { hostname } = new URL(url);
-			const enabled = await getDomainEnabled(hostname);
+			const enabled = enabledMap
+				? (enabledMap[hostname] ?? true)
+				: await getDomainEnabled(hostname);
+
 			if (enabled) {
 				await browser.action.setBadgeText({ text: "", tabId });
 			} else {
@@ -46,27 +55,10 @@ export default defineBackground(() => {
 	storage.watch<Record<string, boolean>>("local:enabled", async (newMap) => {
 		if (!newMap) return;
 
-		const tabs = await browser.tabs.query({
-			active: true,
-			currentWindow: true,
-		});
+		const tabs = await browser.tabs.query({});
 		for (const tab of tabs) {
 			if (tab.id && tab.url) {
-				try {
-					const { hostname } = new URL(tab.url);
-					const enabled = newMap[hostname] ?? true;
-					if (enabled) {
-						await browser.action.setBadgeText({ text: "", tabId: tab.id });
-					} else {
-						await browser.action.setBadgeText({ text: "OFF", tabId: tab.id });
-						await browser.action.setBadgeBackgroundColor({
-							color: "#5F6368",
-							tabId: tab.id,
-						});
-					}
-				} catch {
-					// Ignore
-				}
+				updateBadge(tab.id, tab.url, newMap);
 			}
 		}
 	});

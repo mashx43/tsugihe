@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { isModifierKey } from "@/utils/keyboard";
 
 interface UseKeyRecorderProps {
 	updateNextKey: (key: string) => Promise<void>;
@@ -19,8 +20,7 @@ export function useKeyRecorder(props: UseKeyRecorderProps) {
 		e.stopPropagation();
 
 		// Check if only modifier key is pressed
-		const isModifier = ["Alt", "Control", "Meta", "Shift"].includes(e.key);
-		if (isModifier) {
+		if (isModifierKey(e.key)) {
 			setError(i18n.t("error_modifier_key"));
 			setTimeout(() => setError(null), 3000);
 			return;

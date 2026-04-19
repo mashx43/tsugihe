@@ -4,6 +4,7 @@ import {
 	createSignal,
 	onCleanup,
 } from "solid-js";
+import { FormField } from "@/components/ui/FormField";
 import { getDisabledDomains, setDisabledDomains } from "@/utils/storage";
 
 export function DisabledSitesEditor() {
@@ -55,12 +56,11 @@ export function DisabledSitesEditor() {
 		await setDisabledDomains(normalized);
 
 		// Optimistically update the resource so the UI doesn't flicker
-		// if the watch event is delayed
 		mutate(normalized);
 	}
 
 	return (
-		<div class="form-control">
+		<FormField description={i18n.t("disabled_sites_description")}>
 			<textarea
 				class="textarea textarea-xs field-sizing-content min-h-0 w-full"
 				value={localText()}
@@ -70,9 +70,6 @@ export function DisabledSitesEditor() {
 				placeholder="example.com"
 				spellcheck={false}
 			/>
-			<div class="label">
-				<span class="label-text">{i18n.t("disabled_sites_description")}</span>
-			</div>
-		</div>
+		</FormField>
 	);
 }
