@@ -3,6 +3,7 @@ import {
 	findNextByUrl,
 	findPrev,
 	findPrevByUrl,
+	type NavigationResult,
 } from "@mash43/relnext";
 import {
 	getDomainEnabled,
@@ -33,7 +34,7 @@ interface NavigationConfig {
 	direction: "next" | "prev";
 	checkKey: string;
 	historyFn: () => void;
-	findFn: (html: string, url: string) => string | undefined | null;
+	findFn: (html: string, url: string) => NavigationResult | null;
 	findByUrlFn: (url: string) => Promise<string | undefined | null>;
 	saveKey: string;
 }
@@ -149,9 +150,14 @@ async function navigate(config: NavigationConfig): Promise<void> {
 	}
 
 	if (!targetUrl) {
-		const found = config.findFn(document.documentElement.outerHTML, currentUrl);
-		if (found) {
-			targetUrl = found;
+		const { url, selector } =
+			config.findFn(document.documentElement.outerHTML, currentUrl) ?? {};
+
+		if (url) {
+			targetUrl = url;
+		} else if (selector) {
+			const el = document.querySelector(selector) as HTMLAnchorElement | null;
+			el?.click();
 		}
 	}
 
