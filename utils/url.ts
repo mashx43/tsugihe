@@ -88,7 +88,7 @@ export function getTargetUrlByPattern(
 						.padStart(numStr.length, "0");
 
 					// match.indices[1] contains the start and end index of the first capture group
-					const [start, end] = match.indices[1];
+					const [start, end] = match.indices[1] ?? [0, 0];
 
 					return (
 						currentUrl.substring(0, start) +

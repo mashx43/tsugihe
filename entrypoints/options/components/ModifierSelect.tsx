@@ -1,7 +1,6 @@
 import { For, type JSX } from "solid-js";
 import { FormField } from "@/components/ui/FormField";
-import { getModifierLabels } from "@/utils/keyboard";
-import type { ModifierKey } from "@/utils/storage";
+import { getModifierLabels, type ModifierKey } from "@/utils/keyboard";
 
 interface ModifierSelectProps {
 	value: ModifierKey | undefined;
