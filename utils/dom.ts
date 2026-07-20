@@ -29,6 +29,8 @@ export function clickLinkByUrl(url: string): boolean {
 		document.querySelectorAll<HTMLAnchorElement>("a[href]"),
 	);
 	const targetLink = links.find((a) => {
+		if (a.target === "_blank") return false;
+
 		try {
 			return new URL(a.href).href === new URL(url).href;
 		} catch {
