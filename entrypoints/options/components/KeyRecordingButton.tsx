@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+import { i18n } from "#imports";
 import { FormField } from "@/components/ui/FormField";
 import { formatKey } from "@/utils/keyboard";
 

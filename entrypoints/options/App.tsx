@@ -5,6 +5,7 @@ import { KeyRecordingButton } from "./components/KeyRecordingButton";
 import { ModifierSelect } from "./components/ModifierSelect";
 import { useKeyRecorder } from "./hooks/useKeyRecorder";
 import "../popup/App.css";
+import { i18n } from "#imports";
 
 export default function App() {
 	const {

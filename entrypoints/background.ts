@@ -1,3 +1,4 @@
+import { browser, defineBackground, storage } from "#imports";
 import { getDomainEnabled, setDomainEnabled } from "@/utils/storage";
 
 export default defineBackground(() => {

@@ -4,6 +4,7 @@ import { name } from "./package.json";
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
+	imports: false,
 	modules: ["@wxt-dev/i18n/module", "@wxt-dev/module-solid"],
 	manifest: () => ({
 		name: name.charAt(0).toUpperCase() + name.slice(1),

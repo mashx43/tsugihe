@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+import { i18n } from "#imports";
 import icon from "~/assets/icon.svg";
 
 export function NotAvailable(): JSX.Element {

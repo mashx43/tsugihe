@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+import { i18n } from "#imports";
 
 const URL_PATTERN_POPOVER_ID = "--url-pattern-popover" as const;
 const URL_PATTERN_POPOVER_ANCHOR_ID = "--url-pattern-popover-anchor" as const;

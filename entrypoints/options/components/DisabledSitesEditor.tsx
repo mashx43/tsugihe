@@ -4,6 +4,8 @@ import {
 	createSignal,
 	onCleanup,
 } from "solid-js";
+import { i18n } from "#i18n";
+import { storage } from "#imports";
 import { FormField } from "@/components/ui/FormField";
 import { getDisabledDomains, setDisabledDomains } from "@/utils/storage";
 

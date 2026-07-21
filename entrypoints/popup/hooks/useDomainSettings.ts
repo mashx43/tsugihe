@@ -1,5 +1,6 @@
 import { canIExtend } from "@mash43/can-i-extend";
 import { createMemo, createResource } from "solid-js";
+import { browser } from "#imports";
 import {
 	getDomainEnabled,
 	getDomainPatterns,

@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+import { type Browser, i18n } from "#imports";
 import { PatternAddForm } from "./PatternAddForm";
 import { QuickPatternRegistration } from "./QuickPatternRegistration";
 

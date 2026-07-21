@@ -1,4 +1,5 @@
 import { createResource } from "solid-js";
+import { browser } from "#imports";
 import {
 	formatKey,
 	getModifierLabels,

@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { i18n } from "#imports";
 import { isModifierKey } from "@/utils/keyboard";
 
 interface UseKeyRecorderProps {

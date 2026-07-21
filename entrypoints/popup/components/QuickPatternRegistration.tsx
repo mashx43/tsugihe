@@ -1,4 +1,5 @@
 import { For, type JSX, Show } from "solid-js";
+import { type Browser, i18n } from "#imports";
 import { generatePattern, tokenizeUrl } from "@/utils/url";
 
 interface Props {

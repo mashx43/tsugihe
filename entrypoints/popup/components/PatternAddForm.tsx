@@ -1,4 +1,5 @@
 import { createSignal, type JSX } from "solid-js";
+import { i18n } from "#imports";
 
 interface Props {
 	patterns: string[] | undefined;

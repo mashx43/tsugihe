@@ -1,3 +1,4 @@
+import { storage } from "#imports";
 import type { ModifierKey } from "@/utils/keyboard";
 
 const KEY_ENABLED = "local:enabled";

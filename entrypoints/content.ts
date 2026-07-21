@@ -5,6 +5,7 @@ import {
 	findPrevByUrl,
 	type NavigationResult,
 } from "@mash43/relnext";
+import { defineContentScript } from "#imports";
 import { clickLinkByUrl, isInteractiveElement } from "@/utils/dom";
 import { isModifierMatch } from "@/utils/keyboard";
 import {

@@ -7,6 +7,7 @@ import { PatternTabs } from "./components/PatternTabs";
 import { UrlPatternHelp } from "./components/UrlPatternHelp";
 import { useDomainSettings } from "./hooks/useDomainSettings";
 import "./App.css";
+import { i18n } from "#imports";
 
 function App() {
 	const {
