@@ -2,7 +2,7 @@
 	"description": "Navigate to the next and previous pages of a website using keyboard shortcuts.",
 	"add": "Add",
 	"click_to_register": "Click a page number button to register.",
-	"enabled_toggle_label": "Enable for this site",
+	"navigation": "Navigation",
 	"help": "Help",
 	"not_available": "Not available on this site.",
 	"regex": "Regex",
@@ -21,5 +21,11 @@
 	"error_modifier_key": "Modifier keys cannot be assigned.",
 	"key_settings_title": "Keybindings",
 	"disabled_sites_title": "Disabled Sites",
-	"disabled_sites_description": "Enter one domain per line."
+	"disabled_sites_description": "Enter one domain per line.",
+	"strategy_all": "All (Auto)",
+	"strategy_disabled": "Disabled",
+	"strategy_pattern": "URL Pattern",
+	"strategy_relnext": "DOM Parsing (rel=next)",
+	"strategy_history": "History",
+	"strategy_lookup": "URL Lookup"
 }

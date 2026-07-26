@@ -1,18 +1,21 @@
 import { storage } from "#imports";
 import type { ModifierKey } from "@/utils/keyboard";
+import type { DomainStrategy } from "@/utils/navigation_strategies";
 
-const KEY_ENABLED = "local:enabled";
+export type { DomainStrategy };
+
 const KEY_URL_PATTERNS = "local:url_patterns";
 const KEY_MODIFIER_KEY = "local:modifier_key";
 const KEY_NEXT_KEY = "local:next_key";
 const KEY_PREV_KEY = "local:prev_key";
+export const KEY_STRATEGY = "local:strategy";
 
 type StorageKey =
-	| typeof KEY_ENABLED
 	| typeof KEY_URL_PATTERNS
 	| typeof KEY_MODIFIER_KEY
 	| typeof KEY_NEXT_KEY
-	| typeof KEY_PREV_KEY;
+	| typeof KEY_PREV_KEY
+	| typeof KEY_STRATEGY;
 
 /**
  * Gets a value from storage for the specified key.
@@ -25,22 +28,29 @@ async function getStorage<T extends Record<string, unknown>>(
 }
 
 /**
- * Gets the enabled/disabled state for the specified host
+ * Gets the entire domain strategy map from storage.
  */
-export async function getDomainEnabled(host: string): Promise<boolean> {
-	const map = await getStorage<Record<string, boolean>>(KEY_ENABLED);
-	return map[host] ?? true;
+export function getStrategyMap(): Promise<Record<string, DomainStrategy>> {
+	return getStorage<Record<string, DomainStrategy>>(KEY_STRATEGY);
 }
 
 /**
- * Saves the enabled/disabled state for the specified host
+ * Gets the navigation strategy for the specified host
  */
-export async function setDomainEnabled(
+export async function getDomainStrategy(host: string): Promise<DomainStrategy> {
+	const map = await getStrategyMap();
+	return map[host] ?? "all";
+}
+
+/**
+ * Saves the navigation strategy for the specified host
+ */
+export async function setDomainStrategy(
 	host: string,
-	enabled: boolean,
+	strategy: DomainStrategy,
 ): Promise<void> {
-	const map = await getStorage<Record<string, boolean>>(KEY_ENABLED);
-	await storage.setItem(KEY_ENABLED, { ...map, [host]: enabled });
+	const map = await getStrategyMap();
+	await storage.setItem(KEY_STRATEGY, { ...map, [host]: strategy });
 }
 
 /**
@@ -105,29 +115,40 @@ export async function setPrevKey(key: string): Promise<void> {
 }
 
 /**
- * Gets all domains where enabled is false
+ * Gets all domains where strategy is disabled
  */
 export async function getDisabledDomains(): Promise<string[]> {
-	const map = await getStorage<Record<string, boolean>>(KEY_ENABLED);
-	const results: string[] = [];
-	for (const [host, enabled] of Object.entries(map)) {
-		if (!enabled) {
-			results.push(host);
+	const strategyMap = await getStrategyMap();
+	const disabled: string[] = [];
+
+	for (const [host, strategy] of Object.entries(strategyMap)) {
+		if (strategy === "disabled") {
+			disabled.push(host);
 		}
 	}
-	return results;
+	return disabled;
 }
 
 /**
- * Sets the disabled domains list, replacing the entire enabled map
+ * Sets the disabled domains list
  */
 export async function setDisabledDomains(domains: string[]): Promise<void> {
-	const map: Record<string, boolean> = {};
+	const strategyMap = await getStrategyMap();
+	const updatedStrategyMap: Record<string, DomainStrategy> = {
+		...strategyMap,
+	};
+
+	for (const [host, strategy] of Object.entries(updatedStrategyMap)) {
+		if (strategy === "disabled") {
+			updatedStrategyMap[host] = "all";
+		}
+	}
+
 	for (const domain of domains) {
 		const trimmed = domain.trim();
 		if (trimmed) {
-			map[trimmed] = false;
+			updatedStrategyMap[trimmed] = "disabled";
 		}
 	}
-	await storage.setItem(KEY_ENABLED, map);
+	await storage.setItem(KEY_STRATEGY, updatedStrategyMap);
 }

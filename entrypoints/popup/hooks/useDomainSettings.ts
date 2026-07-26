@@ -2,10 +2,11 @@ import { canIExtend } from "@mash43/can-i-extend";
 import { createMemo, createResource } from "solid-js";
 import { browser } from "#imports";
 import {
-	getDomainEnabled,
+	type DomainStrategy,
 	getDomainPatterns,
-	setDomainEnabled,
+	getDomainStrategy,
 	setDomainPatterns,
+	setDomainStrategy,
 } from "@/utils/storage";
 
 export function useDomainSettings() {
@@ -33,12 +34,12 @@ export function useDomainSettings() {
 		}
 	});
 
-	// Resource for enable/disable state
-	const [enabled, { mutate: mutateEnabled }] = createResource(
+	// Resource for strategy state
+	const [strategy, { mutate: mutateStrategy }] = createResource(
 		hostname,
 		async (host) => {
-			if (!host) return true;
-			return await getDomainEnabled(host);
+			if (!host) return "all";
+			return await getDomainStrategy(host);
 		},
 	);
 
@@ -51,14 +52,12 @@ export function useDomainSettings() {
 		},
 	);
 
-	async function toggleEnabled() {
+	async function updateStrategy(value: DomainStrategy) {
 		const host = hostname();
-		const currentValue = enabled();
-		if (!host || currentValue === undefined) return;
+		if (!host) return;
 
-		const newValue = !currentValue;
-		mutateEnabled(newValue);
-		await setDomainEnabled(host, newValue);
+		mutateStrategy(value);
+		await setDomainStrategy(host, value);
 	}
 
 	async function updatePatterns(value: string[]) {
@@ -72,9 +71,9 @@ export function useDomainSettings() {
 	return {
 		currentTab,
 		hostname,
-		enabled,
+		strategy,
 		patterns,
-		toggleEnabled,
+		updateStrategy,
 		updatePatterns,
 	};
 }

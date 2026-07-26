@@ -1,29 +1,35 @@
 import { browser, defineBackground, storage } from "#imports";
-import { getDomainEnabled, setDomainEnabled } from "@/utils/storage";
+import {
+	type DomainStrategy,
+	getDomainStrategy,
+	KEY_STRATEGY,
+	setDomainStrategy,
+} from "@/utils/storage";
+import { migrateLegacyEnabledSettings } from "./popup/utils/migration";
 
 export default defineBackground(() => {
 	browser.runtime.onInstalled.addListener(async (details) => {
 		if (details.reason === "install") {
-			const existing =
-				await storage.getItem<Record<string, boolean>>("local:enabled");
-			if (!existing) {
-				await setDomainEnabled("www.youtube.com", false);
-			}
+			await setDomainStrategy("www.youtube.com", "disabled");
+		} else if (details.reason === "update") {
+			if (!details.previousVersion) return;
+			await migrateLegacyEnabledSettings(details.previousVersion);
 		}
 	});
 
 	async function updateBadge(
 		tabId: number,
 		url?: string,
-		enabledMap?: Record<string, boolean>,
+		strategyMap?: Record<string, DomainStrategy>,
 	) {
 		if (!url) return;
 
 		try {
 			const { hostname } = new URL(url);
-			const enabled = enabledMap
-				? (enabledMap[hostname] ?? true)
-				: await getDomainEnabled(hostname);
+			const strategy = strategyMap
+				? (strategyMap[hostname] ?? "all")
+				: await getDomainStrategy(hostname);
+			const enabled = strategy !== "disabled";
 
 			if (enabled) {
 				await browser.action.setBadgeText({ text: "", tabId });
@@ -53,14 +59,17 @@ export default defineBackground(() => {
 	});
 
 	// Monitor storage changes
-	storage.watch<Record<string, boolean>>("local:enabled", async (newMap) => {
-		if (!newMap) return;
+	storage.watch<Record<string, DomainStrategy>>(
+		KEY_STRATEGY,
+		async (newMap) => {
+			if (!newMap) return;
 
-		const tabs = await browser.tabs.query({});
-		for (const tab of tabs) {
-			if (tab.id && tab.url) {
-				updateBadge(tab.id, tab.url, newMap);
+			const tabs = await browser.tabs.query({});
+			for (const tab of tabs) {
+				if (tab.id && tab.url) {
+					updateBadge(tab.id, tab.url, newMap);
+				}
 			}
-		}
-	});
+		},
+	);
 });

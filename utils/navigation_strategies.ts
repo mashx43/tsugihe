@@ -69,11 +69,38 @@ export const lookupStrategy: NavigationStrategy = async (ctx) => {
 };
 
 /**
+ * Strategy IDs
+ */
+export type StrategyId = "pattern" | "relnext" | "history" | "lookup";
+
+/**
+ * Domain strategy selection mode
+ */
+export type DomainStrategy = "all" | "disabled" | StrategyId;
+
+/**
+ * Map of strategy ID to NavigationStrategy function
+ */
+export const STRATEGY_MAP: Record<StrategyId, NavigationStrategy> = {
+	pattern: patternStrategy,
+	relnext: relNextStrategy,
+	history: historyStrategy,
+	lookup: lookupStrategy,
+};
+
+/**
  * The ordered list of strategies to try.
  */
-export const NAVIGATION_STRATEGIES: NavigationStrategy[] = [
-	patternStrategy,
-	relNextStrategy,
-	historyStrategy,
-	lookupStrategy,
-];
+const NAVIGATION_STRATEGIES: NavigationStrategy[] = Object.values(STRATEGY_MAP);
+
+/**
+ * Returns navigation strategies to run based on the configured mode.
+ */
+export function getStrategiesForMode(
+	mode: DomainStrategy,
+): NavigationStrategy[] {
+	if (mode === "disabled") return [];
+	if (mode === "all") return NAVIGATION_STRATEGIES;
+	const strategy = STRATEGY_MAP[mode as StrategyId];
+	return strategy ? [strategy] : NAVIGATION_STRATEGIES;
+}

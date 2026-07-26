@@ -13,9 +13,9 @@ function App() {
 	const {
 		currentTab,
 		hostname,
-		enabled,
+		strategy,
 		patterns,
-		toggleEnabled,
+		updateStrategy,
 		updatePatterns,
 	} = useDomainSettings();
 	const { getHint } = useKeySettings();
@@ -27,8 +27,8 @@ function App() {
 					<div class="space-y-6">
 						<StrategySelect
 							hostname={hostname()}
-							enabled={enabled()}
-							onToggle={toggleEnabled}
+							strategy={strategy()}
+							onStrategyChange={updateStrategy}
 						/>
 						<div class="card border border-base-300 bg-base-200 shadow-xl">
 							<div class="card-body p-4">

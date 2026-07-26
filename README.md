@@ -5,8 +5,8 @@ Tsugihe is a browser extension that allows you to navigate to the next and previ
 ## Features
 
 *   **Keyboard Shortcuts:** Navigate through paginated content without using the mouse.
+*   **Site-Specific Navigation Strategies:** Choose and configure specific navigation strategies (All / Disabled / URL Pattern / DOM Parsing / URL Lookup) per domain.
 *   **Customizable Rules:** Add custom URL patterns using regular expressions for websites that are not supported by default.
-*   **Site-specific Settings:** Disable the extension on websites where you don't want it to run.
 *   **Configurable Keys:** Set your preferred keys for "next" and "previous" navigation.
 *   **Intelligent Discovery:** Automatically finds "Next" and "Prev" links from the page content, even if they aren't explicitly using `href` attributes (via DOM interaction).
 

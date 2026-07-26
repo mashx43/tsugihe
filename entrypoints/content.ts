@@ -16,11 +16,12 @@ import {
 	setHistoryDirection,
 } from "@/utils/navigation_history";
 import {
-	NAVIGATION_STRATEGIES,
+	getStrategiesForMode,
 	type NavigationContext,
 } from "@/utils/navigation_strategies";
 import {
-	getDomainEnabled,
+	type DomainStrategy,
+	getDomainStrategy,
 	getModifierKey,
 	getNextKey,
 	getPrevKey,
@@ -65,7 +66,10 @@ function performNavigation(url: string, direction: Direction): void {
 /**
  * Navigates in the specified direction using strategies.
  */
-async function navigate(config: NavigationConfig): Promise<void> {
+async function navigate(
+	config: NavigationConfig,
+	strategyMode: DomainStrategy,
+): Promise<void> {
 	const context: NavigationContext = {
 		direction: config.direction,
 		currentUrl: window.location.href,
@@ -75,7 +79,8 @@ async function navigate(config: NavigationConfig): Promise<void> {
 
 	let targetUrl: string | undefined | null = null;
 
-	for (const strategy of NAVIGATION_STRATEGIES) {
+	const strategies = getStrategiesForMode(strategyMode);
+	for (const strategy of strategies) {
 		targetUrl = await strategy(context);
 		if (targetUrl) break;
 	}
@@ -106,20 +111,24 @@ export default defineContentScript({
 			const target = event.target as HTMLElement;
 			if (isInteractiveElement(target)) return;
 
-			const [enabled, modifier, nextKey, prevKey] = await Promise.all([
-				getDomainEnabled(location.hostname),
+			const [strategyMode, modifier, nextKey, prevKey] = await Promise.all([
+				getDomainStrategy(location.hostname),
 				getModifierKey(),
 				getNextKey(),
 				getPrevKey(),
 			]);
-			if (!enabled || !isModifierMatch(event, modifier)) return;
+
+			const disabled = strategyMode === "disabled";
+			if (disabled || !isModifierMatch(event, modifier)) {
+				return;
+			}
 
 			if (event.key === nextKey) {
 				event.preventDefault();
-				await navigate(NAVIGATION_CONFIGS.next);
+				await navigate(NAVIGATION_CONFIGS.next, strategyMode);
 			} else if (event.key === prevKey) {
 				event.preventDefault();
-				await navigate(NAVIGATION_CONFIGS.prev);
+				await navigate(NAVIGATION_CONFIGS.prev, strategyMode);
 			}
 		});
 	},

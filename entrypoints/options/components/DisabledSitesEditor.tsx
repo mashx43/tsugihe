@@ -7,7 +7,12 @@ import {
 import { i18n } from "#i18n";
 import { storage } from "#imports";
 import { FormField } from "@/components/ui/FormField";
-import { getDisabledDomains, setDisabledDomains } from "@/utils/storage";
+import {
+	type DomainStrategy,
+	getDisabledDomains,
+	KEY_STRATEGY,
+	setDisabledDomains,
+} from "@/utils/storage";
 
 export function DisabledSitesEditor() {
 	const [domains, { mutate }] = createResource(getDisabledDomains);
@@ -15,24 +20,22 @@ export function DisabledSitesEditor() {
 	const [isEditing, setIsEditing] = createSignal(false);
 
 	createEffect(() => {
-		if (!isEditing()) {
-			const d = domains();
-			if (d) {
-				setLocalText(d.join("\n"));
-			}
+		const d = domains();
+		if (d && !isEditing()) {
+			setLocalText(d.join("\n"));
 		}
 	});
 
-	const unwatch = storage.watch<Record<string, boolean>>(
-		"local:enabled",
+	const unwatch = storage.watch<Record<string, DomainStrategy>>(
+		KEY_STRATEGY,
 		(newMap) => {
 			if (!newMap) {
 				mutate([]);
 				return;
 			}
 			const disabled: string[] = [];
-			for (const [host, enabled] of Object.entries(newMap)) {
-				if (!enabled) {
+			for (const [host, strategy] of Object.entries(newMap)) {
+				if (strategy === "disabled") {
 					disabled.push(host);
 				}
 			}
@@ -50,15 +53,17 @@ export function DisabledSitesEditor() {
 	}
 
 	async function handleBlur() {
-		setIsEditing(false);
 		const lines = localText().split("\n");
 		const normalized = lines.map((l) => l.trim()).filter((l) => l.length > 0);
 
-		// Update storage
+		// Update storage first
 		await setDisabledDomains(normalized);
 
-		// Optimistically update the resource so the UI doesn't flicker
+		// Optimistically update resource
 		mutate(normalized);
+
+		// Reset editing state after update completes
+		setIsEditing(false);
 	}
 
 	return (
