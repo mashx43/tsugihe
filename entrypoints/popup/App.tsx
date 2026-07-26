@@ -1,9 +1,9 @@
 import { Show } from "solid-js";
 import { useKeySettings } from "@/hooks/useKeySettings";
-import { EnabledToggle } from "./components/EnabledToggle";
 import { NotAvailable } from "./components/NotAvailable";
 import { PatternEditor } from "./components/PatternEditor";
 import { PatternTabs } from "./components/PatternTabs";
+import { StrategySelect } from "./components/StrategySelect";
 import { UrlPatternHelp } from "./components/UrlPatternHelp";
 import { useDomainSettings } from "./hooks/useDomainSettings";
 import "./App.css";
@@ -25,7 +25,7 @@ function App() {
 			<Show when={hostname()} fallback={<NotAvailable />}>
 				{(hostname) => (
 					<div class="space-y-6">
-						<EnabledToggle
+						<StrategySelect
 							hostname={hostname()}
 							enabled={enabled()}
 							onToggle={toggleEnabled}

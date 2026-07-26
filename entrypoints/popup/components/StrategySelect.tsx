@@ -7,7 +7,7 @@ interface Props {
 	onToggle: () => void;
 }
 
-export function EnabledToggle(props: Props): JSX.Element {
+export function StrategySelect(props: Props): JSX.Element {
 	return (
 		<div class="card border border-base-300 bg-base-200 shadow-xl">
 			<div class="card-body p-4">
